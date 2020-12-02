@@ -2,14 +2,18 @@ import logo from './logo.svg';
 import './App.css';
 import { Component } from 'react';
 import SignupForm from './components/SignupForm'
+import LoginForm from './components/LoginForm'
+
+const baseUrl = "http://localhost:3000/"
 
 class App extends Component {
   state = {
-    user: {}
+    user: {},
+    error: ""
   }
 
   signUp = user => {
-    fetch("http://localhost:3000/users", {
+    fetch(baseUrl + "users", {
       method: "POST",
       headers: {
         "Accept": "application/json",
@@ -27,6 +31,34 @@ class App extends Component {
     .then(response => response.json())
     .then(user => this.setState({ user }) )
   }
+
+  login = (username, password) => {
+    fetch(baseUrl + "login", {
+      method: "POST",
+      headers: {
+        "Content-Type": 'application/json'
+      },
+      body: JSON.stringify({
+        user: {
+          username,
+          password
+        }
+      })
+    })
+    .then(response => response.json())
+    .then(result => {
+    if(result.token){
+      localStorage.setItem('token', result.token)
+      this.setState({
+        user: result.user
+      })
+    } else {
+      this.setState({
+        error: result.error
+      })
+    }
+    })
+  }
   
 
   render(){
@@ -34,7 +66,12 @@ class App extends Component {
       <div className="App">
         {this.state.user.username
           ? <h2>Welcome! {this.state.user.first_name}</h2>
-          : <SignupForm signUp={this.signUp} />
+          : ( 
+            <>
+              <SignupForm signUp={this.signUp} />
+              <LoginForm login={this.login} error={this.state.error} />
+            </>
+          )
         }
       </div>
     );
